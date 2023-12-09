@@ -1,0 +1,44 @@
+version: '3'
+services:
+  vue-app:
+    container_name: kintai-frontend
+    build:
+      context: .
+      dockerfile: "./frontend/Dockerfile"
+    working_dir: "/src/app"
+    volumes:
+      - ./frontend/app:/src/app
+    tty: true
+    environment:
+      - NODE_ENV=development
+    ports:
+      - "5173:5173"
+    command: sh -c "npm run dev"
+  api:
+    container_name: kintai-backend
+    build:
+      context: .
+      dockerfile: "./backend/Dockerfile"
+    working_dir: "/src/api"
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./backend/api:/src/api
+    depends_on:
+      - mysql-db
+    links:
+      - mysql-db
+    command: flask run --host 0.0.0.0 --port 5001
+
+  mysql-db:
+    build: ./db
+    restart: always
+    container_name: kintai-db
+    env_file: db/.env-mysql
+    volumes:
+      - ./data/db:/docker-entrypoint-initdb.d
+    ports:
+      - 3306:3306
+
+volumes:
+  mysql-db:
